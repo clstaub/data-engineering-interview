@@ -22,7 +22,7 @@ cursor = conn.cursor()
 # Generate Fake Data
 NUM_PATIENTS = 10
 NUM_PRACTITIONERS = 5
-NUM_ENCOUNTERS = 15
+NUM_ENCOUNTERS = 50
 NUM_OBSERVATIONS = 20
 NUM_MEDICATIONS = 10
 
@@ -59,7 +59,7 @@ for _ in range(NUM_ENCOUNTERS):
         VALUES (%s, %s, %s, %s, %s, %s, NOW())
     """, (encounter_id, random.choice(patients), random.choice(practitioners),
           random.choice(["planned", "in-progress", "finished", "cancelled"]),
-          fake.date_time_between(start_date="-30d", end_date="now"), fake.sentence()))
+          fake.date_time_between(start_date="-12M", end_date="now"), fake.sentence()))
 
 # Insert Observations
 for _ in range(NUM_OBSERVATIONS):
