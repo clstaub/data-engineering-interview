@@ -74,6 +74,28 @@ GROUP BY mr.medication_name
 ORDER BY num_prescriptions DESC
 LIMIT 3;
 
+-- Note: Using LIMIT 3 assumes no ties. For tie handling, I'd use DENSE_RANK(). This wasn't necessary for this dataset from what I saw but is a more robust solution
+WITH medication_counts AS (
+  SELECT
+    mr.medication_name,
+    COUNT(*) AS num_prescriptions
+  FROM "MedicationRequest" mr
+  GROUP BY mr.medication_name
+),
+ranked_medications AS (
+  SELECT
+    medication_name,
+    num_prescriptions,
+    DENSE_RANK() OVER (ORDER BY num_prescriptions DESC) as rank
+  FROM medication_counts
+)
+SELECT
+  medication_name,
+  num_prescriptions
+FROM ranked_medications
+WHERE rank <= 3
+ORDER BY num_prescriptions DESC, medication_name;
+
 -- Question 7: Get practitioners who have never prescribed any medication
 SELECT
   p.id,
@@ -99,6 +121,22 @@ WITH encounter_counts AS (
 )
 SELECT
   ROUND(AVG(CAST(num_encounters AS NUMERIC)), 2) AS avg_encounters_per_patient
+FROM encounter_counts;
+
+-- the query above doesn't take into account patients with no encounters. If we want to include them, we can use the query below:
+WITH all_patients AS (
+  SELECT id FROM "Patient"
+),
+encounter_counts AS (
+  SELECT
+    p.id as patient_id,
+    COUNT(e.id) AS num_encounters
+  FROM all_patients p
+  LEFT JOIN "Encounter" e ON p.id = e.patient_id
+  GROUP BY p.id
+)
+SELECT
+  ROUND(AVG(num_encounters), 2) AS avg_encounters_per_patient
 FROM encounter_counts;
 
 -- Question 9: Identify patients who have never had an encounter but have a medication request
